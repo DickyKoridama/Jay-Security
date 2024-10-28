@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>JAY Security - Monitoring Jaringan</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true">
+QWidget {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+}
+
+QLabel {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ecf0f1;
+    margin-bottom: 10px;
+}
+
+QPushButton {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #2980b9;
+}
+
+QTableWidget {
+    background-color: #34495e;
+    color: #ecf0f1;
+    border: 1px solid #ecf0f1;
+}
+
+QHeaderView::section {
+    background-color: #2980b9;
+    color: white;
+    padding: 5px;
+    border: 1px solid #2c3e50;
+}
+
+    </string>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>15</number>
+    </property>
+    <property name="topMargin">
+     <number>15</number>
+    </property>
+    <property name="rightMargin">
+     <number>15</number>
+    </property>
+    <property name="bottomMargin">
+     <number>15</number>
+    </property>
+
+    <!-- Judul Aplikasi -->
+    <item>
+     <widget class="QLabel" name="AppName">
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="text">
+       <string>JAY Security - Monitoring Jaringan</string>
+      </property>
+     </widget>
+    </item>
+
+    <!-- Tabel untuk Monitoring Jaringan -->
+    <item>
+     <widget class="QTableWidget" name="networkTable">
+      <property name="columnCount">
+       <number>5</number>
+      </property>
+      <property name="rowCount">
+       <number>0</number>
+      </property>
+      <property name="horizontalHeaderLabels">
+       <stringlist>
+        <string>IP Source</string>
+        <string>IP Destination</string>
+        <string>Protocol</string>
+        <string>Time</string>
+        <string>Info</string>
+       </stringlist>
+      </property>
+     </widget>
+    </item>
+
+    <!-- Tombol Kontrol untuk Monitoring dan Log -->
+    <item>
+     <layout class="QHBoxLayout" name="buttonLayout">
+      <item>
+       <widget class="QPushButton" name="startButton">
+        <property name="text">
+         <string>Mulai Monitoring</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="stopButton">
+        <property name="text">
+         <string>Hentikan Monitoring</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="logButton"> <!-- Tombol untuk melihat log -->
+        <property name="text">
+         <string>Lihat Log</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+
+    <!-- Label Status -->
+    <item>
+     <widget class="QLabel" name="statusLabel">
+      <property name="text">
+       <string>Status: Menunggu</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

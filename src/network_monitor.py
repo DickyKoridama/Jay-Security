@@ -1,13 +1,17 @@
+# src/network_monitor.py
 from scapy.all import sniff, IP
 import threading
 from queue import Queue
 import time
+from src.fsa_detection import FSADetector  # Import kelas FSADetector
+from src.alert_system import send_alert  # Import fungsi pengiriman notifikasi
 
 class NetworkMonitor:
     def __init__(self, interface):
         self.interface = interface
         self.running = False
         self.packet_queue = Queue(maxsize=1000)  # Batasi ukuran queue
+        self.fsa_detector = FSADetector()  # Inisialisasi FSADetector
 
     def start_monitoring(self):
         if not self.running:
@@ -37,6 +41,11 @@ class NetworkMonitor:
             }
             if not self.packet_queue.full():
                 self.packet_queue.put(packet_info)
+
+            # Proses paket untuk deteksi serangan
+            if self.fsa_detector.process_packet(packet_info):
+                print("Serangan terdeteksi!")
+                send_alert(f"Serangan terdeteksi dari {packet_info['src_ip']}")  # Kirim notifikasi
 
     def get_packet(self):
         try:

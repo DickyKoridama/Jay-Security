@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LogWindow</class>
+ <widget class="QWidget" name="LogWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Log Window</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+
+   <!-- Tabel Log -->
+   <item>
+    <widget class="QTableWidget" name="logTable">
+     <property name="columnCount">
+      <number>4</number>
+     </property>
+     <property name="horizontalHeaderLabels">
+      <stringlist>
+       <string>Tanggal</string>
+       <string>Waktu</string>
+       <string>Aktivitas</string>
+       <string>Status</string>
+      </stringlist>
+     </property>
+     <property name="verticalHeaderVisible">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string>
+       /* Tabel Gelap */
+       QTableWidget {
+           background-color: #1A1A1D;
+           color: #E0E0E0;
+           border-radius: 8px;
+           border: 1px solid #333333;
+           gridline-color: #333333;
+           font-size: 13px;
+           padding: 5px;
+       }
+
+       /* Header Tabel */
+       QHeaderView::section {
+           background-color: #2E2E38;
+           color: #E0E0E0;
+           font-weight: bold;
+           font-size: 14px;
+           padding: 10px;
+           border: none;
+           text-align: left;
+       }
+
+       /* Sel tabel */
+       QTableWidget::item {
+           padding: 8px;
+           border-bottom: 1px solid #444444;
+           text-align: left;
+       }
+
+       /* Hover Efek */
+       QTableWidget::item:hover {
+           background-color: rgba(255, 255, 255, 0.07);
+       }
+
+       /* Baris yang Dipilih */
+       QTableWidget::item:selected {
+           background-color: #005792;
+           color: #FFFFFF;
+       }
+      </string>
+     </property>
+    </widget>
+   </item>
+
+   <!-- Layout Tombol Refresh dan Clear Log -->
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="text">
+        <string>Refresh Log</string>
+       </property>
+       <property name="styleSheet">
+        <string>
+         QPushButton {
+             background-color: #005792;
+             color: white;
+             border-radius: 5px;
+             padding: 8px 15px;
+             font-weight: bold;
+         }
+         QPushButton:hover {
+             background-color: #00416A;
+         }
+        </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="clearButton">
+       <property name="text">
+        <string>Clear Log</string>
+       </property>
+       <property name="styleSheet">
+        <string>
+         QPushButton {
+             background-color: #A93226;
+             color: white;
+             border-radius: 5px;
+             padding: 8px 15px;
+             font-weight: bold;
+         }
+         QPushButton:hover {
+             background-color: #7B1E19;
+         }
+        </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <!-- Footer -->
+   <item>
+    <widget class="QLabel" name="footerLabel">
+     <property name="text">
+      <string>© 2023 JAY Security. All rights reserved.</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="styleSheet">
+      <string>
+       QLabel {
+           color: #B0B0B0;
+           font-size: 11px;
+           padding: 5px;
+           background-color: #1A1A1D;
+       }
+      </string>
+     </property>
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

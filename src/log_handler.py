@@ -1,35 +1,40 @@
 # src/log_handler.py
-import logging
-from src.config import LOG_FILE_PATH  # Updated import path
+import sqlite3
+import os
+from src.config import DATABASE_PATH
 
 class LogHandler:
-    """Class untuk mengelola logging aplikasi."""
+    """Class untuk mengelola pencatatan serangan di database."""
 
     def __init__(self):
-        # Konfigurasi logging
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s - %(levelname)s - %(message)s",
-            handlers=[
-                logging.FileHandler(LOG_FILE_PATH),
-                logging.StreamHandler()
-            ]
-        )
+        # Buat direktori database jika belum ada
+        db_dir = os.path.dirname(DATABASE_PATH)
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir)
 
-    def log_activity(self, message):
-        """Log aktivitas informasi."""
-        logging.info(message)
+    def _get_connection(self):
+        """Membuka koneksi SQLite baru."""
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        return conn, cursor
 
-    def log_warning(self, message):
-        """Log aktivitas warning."""
-        logging.warning(message)
+    def log_attack(self, attack_type, src_ip, dest_ip, status="Not Mitigated"):
+        """Mencatat riwayat serangan ke database."""
+        conn, cursor = self._get_connection()
+        try:
+            cursor.execute(
+                '''
+                INSERT INTO logs (timestamp, attack_type, source_ip, destination_ip, status)
+                VALUES (datetime('now'), ?, ?, ?, ?)
+                ''',
+                (attack_type, src_ip, dest_ip, status)
+            )
+            conn.commit()
+        except sqlite3.Error as e:
+            print(f"Gagal mencatat serangan ke database: {e}")
+        finally:
+            conn.close()
 
-    def log_error(self, message):
-        """Log aktivitas error."""
-        logging.error(message)
-
-    def close_connection(self):
-        """Tutup semua handler jika diperlukan (opsional)."""
-        for handler in logging.root.handlers[:]:
-            handler.close()
-            logging.root.removeHandler(handler)
+    def close(self):
+        """Menutup semua handler di logger (tidak diperlukan handler tambahan)."""
+        pass

@@ -2,7 +2,7 @@
 twilio:
   account_sid: "AC42104f3d5d6cad211714b95ac65ce90b"
   auth_token: "aa26b7a1a041e6b5a3caf38bc4437f57"
-  phone_number: "+12564877721" # Nomor telepon Twilio
+  phone_number: "+14155238886" # Nomor telepon Twilio
   admin_phone_number: "+6282199118088" # Nomor telepon admin untuk menerima notifikasi
 
 # Database Configuration

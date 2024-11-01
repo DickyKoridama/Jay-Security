@@ -1,48 +1,36 @@
-# db_setup.py
-import sys
+# src/database/db_setup.py
 import os
 import sqlite3
+import sys
+from src.config import DATABASE_PATH
 
-# Menambahkan path utama proyek ke sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+# Tambahkan path folder `src` ke dalam sys.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_path = os.path.abspath(os.path.join(current_dir, '..', '..'))
+sys.path.append(src_path)
 
-from config import DATABASE_PATH
-
-def create_connection():
-    """Membuat koneksi ke database SQLite."""
-    conn = None
+def create_logs_table():
+    """Membuat tabel logs khusus untuk mencatat riwayat serangan."""
+    connection = sqlite3.connect(DATABASE_PATH)
+    cursor = connection.cursor()
     try:
-        conn = sqlite3.connect(DATABASE_PATH)
-        print("Koneksi ke database berhasil.")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                attack_type TEXT NOT NULL,
+                source_ip TEXT NOT NULL,
+                destination_ip TEXT NOT NULL,
+                status TEXT NOT NULL
+            )
+        ''')
+        connection.commit()
+        print("Tabel logs untuk riwayat serangan berhasil dibuat.")
     except sqlite3.Error as e:
-        print(f"Error dalam menghubungkan ke database: {e}")
-    return conn
+        print(f"Error saat membuat tabel logs: {e}")
+    finally:
+        connection.close()
 
-def setup_database():
-    """Menyiapkan tabel untuk menyimpan log jika belum ada."""
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cursor = conn.cursor()
-            # Membuat tabel logs jika belum ada
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp TEXT NOT NULL,
-                    attack_type TEXT NOT NULL,
-                    source_ip TEXT NOT NULL,
-                    destination_ip TEXT NOT NULL,
-                    status TEXT NOT NULL
-                )
-            ''')
-            conn.commit()
-            print("Tabel logs telah siap.")
-        except sqlite3.Error as e:
-            print(f"Error saat membuat tabel: {e}")
-        finally:
-            conn.close()
-    else:
-        print("Koneksi ke database gagal.")
-
+# Jalankan fungsi ini untuk setup tabel
 if __name__ == "__main__":
-    setup_database()
+    create_logs_table()

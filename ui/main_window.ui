@@ -53,7 +53,6 @@ QHeaderView::section {
     padding: 5px;
     border: 1px solid #2c3e50;
 }
-
     </string>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -70,7 +69,6 @@ QHeaderView::section {
      <number>15</number>
     </property>
 
-    <!-- Judul Aplikasi -->
     <item>
      <widget class="QLabel" name="AppName">
       <property name="alignment">
@@ -82,7 +80,6 @@ QHeaderView::section {
      </widget>
     </item>
 
-    <!-- Tabel untuk Monitoring Jaringan -->
     <item>
      <widget class="QTableWidget" name="networkTable">
       <property name="columnCount">
@@ -103,7 +100,6 @@ QHeaderView::section {
      </widget>
     </item>
 
-    <!-- Tombol Kontrol untuk Monitoring dan Log -->
     <item>
      <layout class="QHBoxLayout" name="buttonLayout">
       <item>
@@ -121,7 +117,7 @@ QHeaderView::section {
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="logButton"> <!-- Tombol untuk melihat log -->
+       <widget class="QPushButton" name="logButton">
         <property name="text">
          <string>Lihat Log</string>
         </property>
@@ -130,7 +126,6 @@ QHeaderView::section {
      </layout>
     </item>
 
-    <!-- Label Status -->
     <item>
      <widget class="QLabel" name="statusLabel">
       <property name="text">

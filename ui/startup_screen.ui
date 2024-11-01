@@ -1,41 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
+ <class>StartupScreen</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>496</width>
-    <height>340</height>
+    <width>500</width>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>JAY Security</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">*{
-color : #fff;
-}
-
-QWidget{
-background : rgb(0, 61, 90);
-border-radius : 12px;
-}</string>
+    <string notr="true">* {
+      color: #fff;
+    }
+    QWidget {
+      background: rgb(0, 61, 90);
+      border-radius: 12px;
+    }</string>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="leftMargin">
-     <number>0</number>
+     <number>10</number>
     </property>
     <property name="topMargin">
-     <number>0</number>
+     <number>10</number>
     </property>
     <property name="rightMargin">
-     <number>0</number>
+     <number>10</number>
     </property>
     <property name="bottomMargin">
-     <number>0</number>
+     <number>10</number>
     </property>
     <item>
      <widget class="QFrame" name="AppLogo">
@@ -50,21 +49,15 @@ border-radius : 12px;
         <widget class="QLabel" name="Logo">
          <property name="minimumSize">
           <size>
-           <width>115</width>
-           <height>115</height>
+           <width>120</width>
+           <height>120</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>115</width>
-           <height>115</height>
+           <width>120</width>
+           <height>120</height>
           </size>
-         </property>
-         <property name="styleSheet">
-          <string notr="true"/>
-         </property>
-         <property name="text">
-          <string/>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -76,9 +69,6 @@ border-radius : 12px;
     </item>
     <item>
      <widget class="QFrame" name="AppBG">
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
@@ -127,17 +117,8 @@ border-radius : 12px;
               <height>50</height>
              </size>
             </property>
-            <property name="autoFillBackground">
-             <bool>true</bool>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
-            </property>
-            <property name="textInteractionFlags">
-             <set>Qt::NoTextInteraction</set>
             </property>
            </widget>
           </item>

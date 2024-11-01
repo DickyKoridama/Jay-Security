@@ -6,5 +6,5 @@ pytest
 pydot
 psutil
 pyyaml
-tqdm
 pyqtspinner
+player

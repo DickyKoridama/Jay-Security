@@ -59,7 +59,7 @@ class NetworkMonitor:
 
             # Deteksi serangan
             attack_type = None
-            if self.fsa_detector.is_ddos_attack_detected():
+            if self.ddos_request_count > self.fsa_detector.normal_threshold:
                 attack_type = "DDoS"
             elif self.port_scan_count > self.fsa_detector.port_scan_threshold:
                 attack_type = "Port Scanning"

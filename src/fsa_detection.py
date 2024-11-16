@@ -1,4 +1,3 @@
-# src/fsa_detection.py
 class MultiAttackFSA:  
     def __init__(self, normal_threshold, warning_threshold, port_scan_threshold, normal_ips):  
         self.sql_state = 'S0'  
@@ -32,8 +31,11 @@ class MultiAttackFSA:
                 self.ddos_state = 'S1'  
         elif self.ddos_state == 'S1':  
             if self.ddos_request_count > self.warning_threshold:  
-                self.ddos_state = 'S2'  # Deteksi DDoS tercapai
+                self.ddos_state = 'S2'    
+        elif self.ddos_state == 'S2':  
             
+            pass
+        
         print(f"New DDoS state: {self.ddos_state}")
 
     def transition_port_scan(self, ip, scan_count):  
@@ -47,17 +49,17 @@ class MultiAttackFSA:
         
         if self.port_scan_state == 'S0':  
             if self.scan_counts[ip] > self.port_scan_threshold:  
-                self.port_scan_state = 'S1'  # Deteksi port scanning tercapai
+                self.port_scan_state = 'S1'    
         elif self.port_scan_state == 'S1':  
             if self.scan_counts[ip] <= self.port_scan_threshold:  
-                self.port_scan_state = 'S0'  # Kembali ke kondisi normal
+                self.port_scan_state = 'S0'    
                 self.scan_counts[ip] = 0  
 
     def is_sql_attack_detected(self):  
         return self.sql_state == 'S3'  
 
     def is_ddos_attack_detected(self):  
-        return self.ddos_state == 'S2'  # Tidak memerlukan argumen tambahan
+        return self.ddos_state == 'S2'  
 
     def is_port_scan_detected(self):  
         return self.port_scan_state == 'S1'

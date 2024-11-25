@@ -9,7 +9,7 @@ class LogsWindow(QtWidgets.QMainWindow):
         uic.loadUi('ui/logs_window.ui', self)
         self.load_logs()
         
-        # Menghubungkan tombol ke fungsinya
+       
         self.refreshButton.clicked.connect(self.load_logs)
         self.clearButton.clicked.connect(self.clear_logs)
 
@@ -23,7 +23,7 @@ class LogsWindow(QtWidgets.QMainWindow):
         logs = cursor.fetchall()
         self.logsTable.setRowCount(0)
 
-        # Tampilkan setiap log serangan di tabel
+     
         for row_num, row_data in enumerate(logs):
             self.logsTable.insertRow(row_num)
             for col_num, data in enumerate(row_data):

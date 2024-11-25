@@ -2,43 +2,72 @@ import unittest
 from src.fsa_detection import MultiAttackFSA
 
 class TestMultiAttackFSA(unittest.TestCase):
-
     def setUp(self):
-        # Inisialisasi objek MultiAttackFSA sebelum setiap pengujian
-        self.normal_ips = ["192.168.1.1", "192.168.1.2"]
-        self.fsa = MultiAttackFSA(normal_threshold=100, warning_threshold=200, port_scan_threshold=10, normal_ips=self.normal_ips)
+        """
+        Setup objek FSA untuk digunakan dalam semua test case.
+        """
+        self.fsa = MultiAttackFSA(
+            normal_threshold=100,
+            warning_threshold=200,
+            port_scan_threshold=10,
+            normal_ips=["192.168.1.1"]
+        )
 
     def test_sql_injection_detection(self):
-        # Uji deteksi SQL Injection
-        self.fsa.transition_sql("'")
-        self.fsa.transition_sql("-")
-        self.assertTrue(self.fsa.is_sql_attack_detected(), "SQL Injection attack should be detected.")
+        """
+        Menguji deteksi SQL Injection.
+        """
+        sql_input = "SELECT * FROM users WHERE username='admin'--"
+        for char in sql_input:
+            self.fsa.transition_sql(char)
+        self.assertTrue(self.fsa.is_sql_attack_detected(), "SQL Injection tidak terdeteksi padahal harusnya terdeteksi.")
+
+        # Reset dan uji input normal
+        self.fsa.sql_state = 'S0'
+        normal_input = "SELECT * FROM users WHERE username='admin'"
+        for char in normal_input:
+            self.fsa.transition_sql(char)
+        self.assertFalse(self.fsa.is_sql_attack_detected(), "SQL Injection terdeteksi padahal tidak ada serangan.")
 
     def test_ddos_detection(self):
-        # Uji deteksi DDoS
-        self.fsa.transition_ddos(50)  # Di bawah ambang batas
-        self.assertEqual(self.fsa.ddos_state, 'S0', "DDoS state should be S0.")
-        
-        self.fsa.transition_ddos(60)  # Melebihi ambang batas normal
-        self.assertEqual(self.fsa.ddos_state, 'S1', "DDoS state should be S1.")
-        
-        self.fsa.transition_ddos(100)  # Melebihi ambang batas peringatan
-        self.assertEqual(self.fsa.ddos_state, 'S2', "DDoS state should be S2.")
+        """
+        Menguji deteksi serangan DDoS.
+        """
+        # Uji transisi ke S1
+        for _ in range(101):  # Melebihi normal_threshold (100)
+            self.fsa.transition_ddos(1)
+        self.assertEqual(self.fsa.ddos_state, 'S1', "FSA tidak masuk state S1 setelah melebihi ambang batas normal.")
+
+        # Uji transisi ke S2
+        for _ in range(100):  # Melebihi warning_threshold (200)
+            self.fsa.transition_ddos(1)
+        self.assertEqual(self.fsa.ddos_state, 'S2', "FSA tidak masuk state S2 setelah melebihi ambang batas peringatan.")
+        self.assertTrue(self.fsa.is_ddos_attack_detected(), "Serangan DDoS tidak terdeteksi padahal harusnya terdeteksi.")
 
     def test_port_scan_detection(self):
-        # Uji deteksi pemindaian port
-        self.fsa.transition_port_scan("192.168.1.3", 5)  # IP tidak normal
-        self.assertEqual(self.fsa.port_scan_state, 'S0', "Port scan state should be S0.")
+        """
+        Menguji deteksi port scanning.
+        """
+        ip = "10.0.0.5"
+
+        # Tambahkan scan count hingga melebihi ambang batas
+        for _ in range(15):
+            self.fsa.transition_port_scan(ip, 1)
+        self.assertTrue(self.fsa.is_port_scan_detected(), "Port scanning tidak terdeteksi padahal harusnya terdeteksi.")
+        self.assertEqual(self.fsa.port_scan_state, 'S1', "FSA tidak masuk state S1 setelah melebihi ambang batas port scanning.")
+
+        # Reset scan count dan uji bahwa state kembali ke S0
+        for _ in range(5):
+            self.fsa.transition_port_scan(ip, -1)
+        self.assertFalse(self.fsa.is_port_scan_detected(), "Port scanning terdeteksi padahal harusnya tidak ada serangan.")
+        self.assertEqual(self.fsa.port_scan_state, 'S0', "FSA tidak kembali ke state S0 setelah scan count turun di bawah ambang batas.")
+
+    def test_normal_ip_exclusion(self):
+        """
+        Menguji bahwa IP dalam daftar normal tidak dianggap melakukan port scanning.
+        """
+        ip = "192.168.1.1"  # IP yang masuk dalam daftar normal
+        for _ in range(15):
+            self.fsa.transition_port_scan(ip, 1)
+        self.assertFalse(self.fsa.is_port_scan_detected(), "Port scanning terdeteksi untuk IP yang ada dalam daftar normal.")
         
-        self.fsa.transition_port_scan("192.168.1.3", 6)  # Melebihi ambang batas pemindaian
-        self.assertEqual(self.fsa.port_scan_state, 'S1', "Port scan state should be S1.")
-        
-        # Sekarang lakukan pemindaian yang cukup untuk mengatur kembali ke S0
-        self.fsa.transition_port_scan("192.168.1.3", 5)  # Total 11, masih di S1
-        self.assertEqual(self.fsa.port_scan_state, 'S1', "Port scan state should still be S1.")
-        
-        # Lakukan pemindaian yang cukup untuk mengatur kembali ke S0
-        self.fsa.transition_port_scan("192.168.1.3", -11)  # Reset hitungan
-        self.assertEqual(self.fsa.port_scan_state, 'S0', "Port scan state should be S0 after reset.")
-if __name__ == '__main__':
-    unittest.main()

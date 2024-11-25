@@ -1,33 +1,54 @@
-# tests/test_network_monitor.py
 import unittest
-from queue import Queue
+from unittest.mock import patch, MagicMock
+from scapy.all import IP, Ether, Raw
 from src.network_monitor import NetworkMonitor
-from scapy.layers.inet import IP  # Mengimpor IP dari Scapy untuk digunakan di MockPacket
 
-# MockPacket yang kompatibel dengan NetworkMonitor
-class MockPacket(dict):
-    def __init__(self, src_ip, dst_ip, proto):
-        self[IP] = type('IPLayer', (object,), {"src": src_ip, "dst": dst_ip, "proto": proto})
 
 class TestNetworkMonitor(unittest.TestCase):
-
     def setUp(self):
-        # Buat instance NetworkMonitor dengan interface dummy
-        self.network_monitor = NetworkMonitor(interface="dummy")
-        self.network_monitor.packet_queue = Queue(maxsize=100)  # Queue untuk antrean paket
+        """Setup sebelum setiap pengujian."""
+        self.interface = "eth0"
+        self.network_monitor = NetworkMonitor(self.interface)
 
-    def test_packet_queueing(self):
-        # Simulasi paket dan tambahkan ke queue
-        packet = {"src_ip": "192.168.1.10", "dest_ip": "192.168.1.1", "protocol": 6}
-        self.network_monitor.packet_queue.put(packet)
-        queued_packet = self.network_monitor.get_packet()
-        self.assertEqual(queued_packet, packet, "Packet tidak sesuai dengan yang diantrekan.")
+    @patch("src.alert_system.send_alert")
+    def test_detect_attacks_ddos(self, mock_send_alert):
+        """
+        Test apakah deteksi DDoS berhasil.
+        """
+        # Buat paket jaringan nyata menggunakan Scapy
+        packet = Ether() / IP(src="192.168.0.1", dst="192.168.0.2", proto=6)
 
-    def test_process_packet(self):
-        # Proses paket mock dan periksa apakah paket masuk ke queue
-        packet = {"src_ip": "192.168.1.10", "dest_ip": "192.168.1.1", "protocol": 6}
-        self.network_monitor._process_packet(MockPacket(src_ip=packet["src_ip"], dst_ip=packet["dest_ip"], proto=packet["protocol"]))
-        self.assertFalse(self.network_monitor.packet_queue.empty(), "Packet tidak diproses dengan benar.")
+        # Kirim beberapa paket untuk memicu DDoS
+        for _ in range(101):  # Sesuai dengan ambang batas normal_threshold
+            self.network_monitor._detect_attacks({
+                "src_ip": packet[IP].src,
+                "dest_ip": packet[IP].dst,
+                "protocol": packet[IP].proto,
+            })
 
-if __name__ == '__main__':
+        # Periksa apakah send_alert dipanggil dengan parameter yang benar
+        mock_send_alert.assert_called_once_with("DDoS", "192.168.0.1")
+
+    @patch("src.alert_system.send_alert")
+    def test_detect_attacks_sql_injection(self, mock_send_alert):
+        """
+        Test apakah deteksi SQL Injection berhasil.
+        """
+        # Buat paket jaringan dengan payload mencurigakan
+        payload = "' OR '1'='1"  # Pola SQL Injection
+        packet = Ether() / IP(src="192.168.0.1", dst="192.168.0.2", proto=6) / Raw(load=payload)
+
+        # Kirim paket untuk memicu deteksi SQL Injection
+        self.network_monitor._detect_attacks({
+            "src_ip": packet[IP].src,
+            "dest_ip": packet[IP].dst,
+            "protocol": packet[IP].proto,
+            "payload": payload,
+        })
+
+        # Periksa apakah send_alert dipanggil dengan parameter yang benar
+        mock_send_alert.assert_called_once_with("SQL Injection", "192.168.0.1")
+
+
+if __name__ == "__main__":
     unittest.main()

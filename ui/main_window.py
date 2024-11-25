@@ -14,7 +14,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_timer = QtCore.QTimer()
         self.update_timer.timeout.connect(self.update_network_data)
 
-        # Menghubungkan tombol dengan fungsi monitoring
+  
         self.startButton.clicked.connect(self.start_monitoring)
         self.stopButton.clicked.connect(self.stop_monitoring)
 
@@ -43,23 +43,26 @@ class MainWindow(QtWidgets.QMainWindow):
         while not self.network_monitor.packet_queue.empty():
             packet = self.network_monitor.get_packet()
             if packet:
-                # Tampilkan peringatan jika serangan terdeteksi
+          
                 if "alert" in packet:
-                    alert_msg = f"⚠️ Serangan terdeteksi: {packet['alert']} dari {packet['src_ip']}"
+                    alert_msg = f"⚠️ Serangan terdeteksi: {packet.get('alert', 'Unknown')} dari {packet.get('src_ip', 'Unknown')}"
                     self.statusLabel.setText(alert_msg)
                     self.show_popup_notification(alert_msg)
                 else:
-                    # Tambahkan data paket ke tabel tampilan
-                    self.add_packet_to_table(packet)
+              
+                    try:
+                        self.add_packet_to_table(packet)
+                    except KeyError as e:
+                        print(f"[ERROR] Missing key in packet: {e}. Packet: {packet}")
 
     def add_packet_to_table(self, packet):
         """Menambahkan data paket ke tabel."""
         row_position = self.networkTable.rowCount()
         self.networkTable.insertRow(row_position)
-        self.networkTable.setItem(row_position, 0, QtWidgets.QTableWidgetItem(packet["src_ip"]))
-        self.networkTable.setItem(row_position, 1, QtWidgets.QTableWidgetItem(packet["dest_ip"]))
-        self.networkTable.setItem(row_position, 2, QtWidgets.QTableWidgetItem(str(packet["protocol"])))
-        self.networkTable.setItem(row_position, 3, QtWidgets.QTableWidgetItem(packet["timestamp"]))
+        self.networkTable.setItem(row_position, 0, QtWidgets.QTableWidgetItem(packet.get("src_ip", "Unknown")))
+        self.networkTable.setItem(row_position, 1, QtWidgets.QTableWidgetItem(packet.get("dest_ip", "Unknown")))
+        self.networkTable.setItem(row_position, 2, QtWidgets.QTableWidgetItem(str(packet.get("protocol", "Unknown"))))
+        self.networkTable.setItem(row_position, 3, QtWidgets.QTableWidgetItem(packet.get("timestamp", "Unknown")))
         self.networkTable.setItem(row_position, 4, QtWidgets.QTableWidgetItem(packet.get("info", "")))
 
     def show_popup_notification(self, message):

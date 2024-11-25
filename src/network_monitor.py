@@ -1,83 +1,97 @@
-# network_monitor.py
+import os
+import sys
 from scapy.all import sniff, IP
 import threading
 from queue import Queue, Empty
 import time
 from src.log_handler import LogHandler
-from src.fsa_detection import MultiAttackFSA
 from src.alert_system import send_alert
+from src.utils.fsa_utils import initialize_fsa
 
 class NetworkMonitor:
-    def __init__(self, interface):
+    def __init__(self, interface, fsa_detector):
         self.interface = interface
         self.running = False
         self.packet_queue = Queue(maxsize=1000)
-        
-        # Daftar IP normal
-        normal_ips = []
-        self.fsa_detector = MultiAttackFSA(
-            normal_threshold=100, 
-            warning_threshold=200, 
-            port_scan_threshold=10, 
-            normal_ips=normal_ips
-        )
-        
-        self.logger = LogHandler()  
-        self.ddos_request_count = 0  
-        self.port_scan_count = 0  
+        self.logger = LogHandler()
+        self.detector = fsa_detector
+        print(f"[INIT] NetworkMonitor initialized on interface: {interface}")
 
     def start_monitoring(self):
         if not self.running:
             self.running = True
-            self.thread = threading.Thread(target=self._sniff_packets)
-            self.thread.start()
+            threading.Thread(target=self._sniff_packets, daemon=True).start()
+            threading.Thread(target=self._process_packet_thread, daemon=True).start()
 
     def stop_monitoring(self):
         self.running = False
-        if hasattr(self, 'thread') and self.thread.is_alive():
-            self.thread.join(timeout=5)
 
     def _sniff_packets(self):
         try:
-            sniff(iface=self.interface, prn=self._process_packet, store=False, 
-                  stop_filter=lambda x: not self.running)
+            sniff(iface=self.interface, filter="tcp", prn=self._enqueue_packet, store=False, stop_filter=lambda _: not self.running)
         except Exception as e:
-            print(f"Error in sniffing: {e}")
+            self.logger.log_activity(f"[ERROR] Sniffing failed: {e}")
 
-    def _process_packet(self, packet):
-        if IP in packet:
-            packet_info = {
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                "src_ip": packet[IP].src,
-                "dest_ip": packet[IP].dst,
-                "protocol": packet[IP].proto,
-                "payload": packet.payload if hasattr(packet, 'payload') else None,
-                "info": ""
-            }
-            if not self.packet_queue.full():
-                self.packet_queue.put(packet_info)
+   
+    def _enqueue_packet(self, packet):
+        if not packet.haslayer(IP):
+            return
+        src_ip = str(packet[IP].src)
+        dest_ip = str(packet[IP].dst)
+        dest_port = getattr(packet[IP], 'dport', None)
+        payload = getattr(packet, 'payload', None)
+        protocol = str(packet[IP].proto) if hasattr(packet[IP], 'proto') else "Unknown"
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+        packet_info = {
+            "src_ip": src_ip,
+            "dest_ip": dest_ip,
+            "dest_port": dest_port,
+            "protocol": protocol,
+            "timestamp": timestamp, 
+            "payload": str(payload) if payload else "",
+        }
+        if not self.packet_queue.full():
+            self.packet_queue.put(packet_info)
 
-            # Deteksi serangan
-            attack_type = None
-            if self.ddos_request_count > self.fsa_detector.normal_threshold:
-                attack_type = "DDoS"
-            elif self.port_scan_count > self.fsa_detector.port_scan_threshold:
-                attack_type = "Port Scanning"
 
-            if attack_type:
-                packet_info["alert"] = attack_type
-                self.logger.log_attack(attack_type, packet_info["src_ip"], packet_info["dest_ip"])
-                send_alert(attack_type, packet_info["src_ip"])
-                if not self.packet_queue.full():
-                    self.packet_queue.put(packet_info)
+    def _process_packet_thread(self):
+        while self.running:
+            try:
+                packet_info = self.packet_queue.get(timeout=1)
+                self._detect_attacks(packet_info)
+            except Empty:
+                continue
 
-            # Reset counter sesuai deteksi
-            if not self.fsa_detector.is_ddos_attack_detected():
-                self.ddos_request_count = 0
-            if not self.fsa_detector.is_port_scan_detected():
-                self.port_scan_count = 0
+    def _detect_attacks(self, packet_info):
+        src_ip = packet_info["src_ip"]
+        dest_ip = packet_info["dest_ip"]
+        dest_port = packet_info.get("dest_port")
+        payload = packet_info.get("payload", "")
+
+        if dest_port is not None and self.detector.detect_port_scan(src_ip, dest_port):
+            print(f"[ALERT] Port scanning detected from {src_ip}")
+            self.logger.log_attack("Port Scanning", src_ip, dest_ip) 
+            send_alert("Port Scanning", src_ip)
+            self.detector.reset_port_scan(src_ip)
+            return
+
+      
+        if not self.detector.port_scan_fsa.is_attack_detected(src_ip):
+            if self.detector.detect_ddos():
+                print(f"[ALERT] DDoS detected from {src_ip}")
+                self.logger.log_attack("DDoS", src_ip, dest_ip) 
+                send_alert("DDoS", src_ip)
+                self.detector.reset_ddos()
+
+        
+        if payload and self.detector.detect_sql_injection(payload):
+            print(f"[ALERT] SQL Injection detected from {src_ip}")
+            self.logger.log_attack("SQL Injection", src_ip, dest_ip)  
+            send_alert("SQL Injection", src_ip)
+            self.detector.reset_sql_injection()
 
     def get_packet(self):
+        """Retrieve packet from queue."""
         try:
             return self.packet_queue.get_nowait()
         except Empty:
